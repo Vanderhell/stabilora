@@ -6,11 +6,10 @@ timeouts.
 
 ## Scope
 
-This first extraction contains five public functions from the PrimitiveCore
+The package contains five public functions from the control domain
 control family. They are stateless or caller-owned-state operations, require no
 heap or operating-system services, and preserve their original `pc_` symbols.
-The remaining control records stay in PrimitiveCore until their independent
-source evidence is restored.
+Other control functions are outside this package boundary.
 
 ## Build and test
 
@@ -30,7 +29,7 @@ isolated footprint measurements are pending; no hardware result is claimed.
 Stabilora combines *stabilis* (steady) and *aurora* (a controlled transition
 from uncertainty to a clear state). It reflects debounce, hysteresis and
 bounded-output behavior. The product originates from
-`control/feedback_and_limits` in PrimitiveCore.
+bounded control, feedback and limits.
 
 ## License
 

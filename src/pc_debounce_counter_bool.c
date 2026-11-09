@@ -1,7 +1,7 @@
-﻿#include "pc_debounce_counter_bool.h"
+#include "pc_debounce_counter_bool.h"
 #include <stddef.h>
 
-bool rm_debounce_counter_bool(bool sample, uint32_t threshold,
+bool pc_debounce_counter_bool(bool sample, uint32_t threshold,
                               uint32_t *counter, bool *stable)
 {
     uint32_t count;

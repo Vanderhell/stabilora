@@ -1,6 +1,6 @@
-﻿#include "pc_debounce_dual_threshold_i32.h"
+#include "pc_debounce_dual_threshold_i32.h"
 #include <stddef.h>
-bool rm_debounce_dual_threshold_i32(int32_t input, int32_t lower,
+bool pc_debounce_dual_threshold_i32(int32_t input, int32_t lower,
                                     int32_t upper, bool *active)
 {
     bool next;
