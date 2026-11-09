@@ -36,7 +36,7 @@ The CMake test option is STABILORA_BUILD_TESTS. The library has no mandatory thi
 Read the individual public header before use. It defines widths, representation, valid ranges, rounding, overflow/saturation/wrap behavior, invalid-input handling and whether output is left unchanged on failure. APIs are stateless unless a caller-owned state object is explicitly present.
 
 ## Testing and validation
-5/5 enabled host tests passed.
+5/5 MSVC tests and 5/5 GCC strict-warning tests passed.
 See docs/TESTING.md for reproducible commands, coverage boundaries and hardware status.
 
 ## Resource status

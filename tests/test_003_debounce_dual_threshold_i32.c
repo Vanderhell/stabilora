@@ -1,5 +1,6 @@
 ﻿#include "pc_debounce_dual_threshold_i32.h"
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 int main(void) {
     bool on=false;

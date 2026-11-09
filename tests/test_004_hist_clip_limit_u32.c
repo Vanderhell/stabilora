@@ -1,6 +1,7 @@
 ﻿#include "pc_hist_clip_limit_u32.h"
 #include <assert.h>
 #include <stdint.h>
+#include <stddef.h>
 
 static uint32_t h[256], out[256];
 static uint32_t state = UINT32_C(0x4445A11C);
