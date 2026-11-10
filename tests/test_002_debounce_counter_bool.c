@@ -1,4 +1,5 @@
 #include "pc_debounce_counter_bool.h"
+#include <stddef.h>
 #include <stdint.h>
 #define CHECK(c) do { if (!(c)) return __LINE__; } while (0)
 

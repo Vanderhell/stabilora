@@ -1,4 +1,5 @@
 #include "pc_debounce_dual_threshold_i32.h"
+#include <stddef.h>
 #include <stdint.h>
 #define CHECK(c) do { if (!(c)) return __LINE__; } while (0)
 int main(void) {

@@ -1,5 +1,6 @@
 #include <stabilora/control/pc_checked_shl_u32.h>
 #include <limits.h>
+#include <stddef.h>
 #include <stdint.h>
 #define CHECK(c) do { if (!(c)) return __LINE__; } while (0)
 static uint32_t state = UINT32_C(0x1234ABCD);
