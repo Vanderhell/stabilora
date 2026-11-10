@@ -4,9 +4,42 @@ on:
   pull_request:
 jobs:
   host:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            compiler: gcc
+            cc: gcc
+            config: Release
+          - os: ubuntu-latest
+            compiler: clang
+            cc: clang
+            config: Release
+          - os: windows-latest
+            compiler: msvc
+            config: Debug
+          - os: windows-latest
+            compiler: msvc
+            config: Release
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: cmake -S . -B build -DSTABILORA_BUILD_TESTS=ON -DCMAKE_C_FLAGS="-Wall -Wextra -Werror"
+      - name: Configure strict Release tests
+        if: matrix.compiler != 'msvc'
+        run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.cc }} -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+      - name: Configure MSVC tests
+        if: matrix.compiler == 'msvc'
+        run: cmake -S . -B build -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON
+      - run: cmake --build build --config ${{ matrix.config }} --parallel
+      - run: ctest --test-dir build --build-config ${{ matrix.config }} --output-on-failure
+  sanitizers:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.compiler }} -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
       - run: cmake --build build --parallel
       - run: ctest --test-dir build --output-on-failure

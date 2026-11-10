@@ -1,7 +1,55 @@
-﻿#include "pc_debounce_counter_bool.h"
-#include <assert.h>
+#include "pc_debounce_counter_bool.h"
 #include <stdint.h>
-int main(void){uint32_t t,c;for(t=1;t<=32u;++t)for(c=0;c<t;++c)for(uint32_t sb=0;sb<2u;++sb)for(uint32_t xb=0;xb<2u;++xb){bool s=sb!=0u,x=xb!=0u;uint32_t nc=c;bool ns=s;bool expected=x!=s&&c==t-1u;assert(pc_debounce_counter_bool(x,t,&nc,&ns));if(expected){assert(ns==x&&nc==0);}else if(x==s){assert(ns==s&&nc==0);}else{assert(ns==s&&nc==c+1u);}}
- {uint32_t c=0;bool s=false;assert(pc_debounce_counter_bool(true,1,&c,&s)&&c==0&&s);c=UINT32_MAX-1u;s=false;assert(pc_debounce_counter_bool(true,UINT32_MAX,&c,&s)&&c==0&&s);c=4;s=true;assert(pc_debounce_counter_bool(true,5,&c,&s)&&c==0&&s);c=4;s=false;assert(pc_debounce_counter_bool(true,5,&c,&s)&&c==0&&s);}
- {uint32_t c=0;bool s=false;assert(!pc_debounce_counter_bool(true,0,&c,&s)&&c==0&&!s);c=3;s=false;assert(!pc_debounce_counter_bool(true,3,&c,&s)&&c==3&&!s);assert(!pc_debounce_counter_bool(true,2,0,&s));assert(!pc_debounce_counter_bool(true,2,&c,0));}
- return 0;}
+#define CHECK(c) do { if (!(c)) return __LINE__; } while (0)
+
+int main(void)
+{
+    uint32_t threshold, count, stable_bit, sample_bit;
+    for (threshold = 1u; threshold <= 32u; ++threshold) {
+        for (count = 0u; count < threshold; ++count) {
+            for (stable_bit = 0u; stable_bit < 2u; ++stable_bit) {
+                for (sample_bit = 0u; sample_bit < 2u; ++sample_bit) {
+                    bool stable = stable_bit != 0u;
+                    const bool sample = sample_bit != 0u;
+                    uint32_t next_count = count;
+                    bool next_stable = stable;
+                    const bool switches = sample != stable && count == threshold - 1u;
+                    CHECK(pc_debounce_counter_bool(sample, threshold,
+                                                   &next_count, &next_stable));
+                    if (switches) CHECK(next_stable == sample && next_count == 0u);
+                    else if (sample == stable) CHECK(next_stable == stable && next_count == 0u);
+                    else CHECK(next_stable == stable && next_count == count + 1u);
+                }
+            }
+        }
+    }
+    {
+        uint32_t c = 0u;
+        bool s = false;
+        CHECK(pc_debounce_counter_bool(true, 1u, &c, &s) && c == 0u && s);
+        c = UINT32_MAX - 1u; s = false;
+        CHECK(pc_debounce_counter_bool(true, UINT32_MAX, &c, &s) && c == 0u && s);
+        c = UINT32_MAX - 2u; s = false;
+        CHECK(pc_debounce_counter_bool(true, UINT32_MAX, &c, &s) && c == UINT32_MAX - 1u && !s);
+        c = 0u; s = false;
+        CHECK(pc_debounce_counter_bool(true, 3u, &c, &s) && c == 1u && !s);
+        CHECK(pc_debounce_counter_bool(false, 3u, &c, &s) && c == 0u && !s);
+        CHECK(pc_debounce_counter_bool(true, 3u, &c, &s) && c == 1u && !s);
+        CHECK(pc_debounce_counter_bool(true, 3u, &c, &s) && c == 2u && !s);
+        CHECK(pc_debounce_counter_bool(true, 3u, &c, &s) && c == 0u && s);
+        CHECK(pc_debounce_counter_bool(true, 3u, &c, &s) && c == 0u && s);
+        CHECK(pc_debounce_counter_bool(false, 3u, &c, &s) && c == 1u && s);
+    }
+    {
+        uint32_t c = UINT32_MAX;
+        bool s = true;
+        CHECK(!pc_debounce_counter_bool(false, UINT32_MAX, &c, &s));
+        CHECK(c == UINT32_MAX && s);
+        c = 3u; s = false;
+        CHECK(!pc_debounce_counter_bool(true, 0u, &c, &s));
+        CHECK(c == 3u && !s);
+        CHECK(!pc_debounce_counter_bool(true, 2u, NULL, &s) && !s);
+        CHECK(!pc_debounce_counter_bool(true, 2u, &c, NULL) && c == 3u);
+    }
+    return 0;
+}

@@ -1,109 +1,54 @@
 ﻿# Stabilora API reference
 
-This reference explains every public header in the Stabilora product. It is generated from the current headers and test sources; the header remains authoritative when a detail conflicts.
+The public C99 surface contains six callable functions. Include paths below are rooted at `include/`; CMake consumers receive that root as a public include directory. Each function preserves output parameters when it returns `false` unless stated otherwise.
 
-## Reading the entries
-Each entry states the public symbol, implementation unit, contract, edge/failure behavior and a call extracted from the validating test source. The examples are evidence-oriented; adapt buffer ownership and numeric units to the application.
+## `pc_control_output_clamp_i32`
 
-## include/stabilora/control/pc_control_output_clamp_i32.h
+Header/source: `stabilora/control/pc_control_output_clamp_i32.h` / `src/pc_control_output_clamp_i32.c`.
 
-**Public symbol:** pc_control_output_clamp_i32
+Clamps any `int32_t` value into the inclusive `[lower, upper]` interval. Equal bounds are valid. Returns `false` for a null output pointer or `lower > upper`, leaving `*output` untouched. The input is passed by value, so it may have originated from the same object as `output`.
 
-**Implementation unit:** src/pc_control_output_clamp_i32.c
+## `pc_debounce_counter_bool`
 
-**Purpose and contract:** Clamp value to the inclusive [lower, upper] interval. Invalid bounds or a null output return false and leave *output unchanged.
+Header/source: `stabilora/control/pc_debounce_counter_bool.h` / `src/pc_debounce_counter_bool.c`.
 
-**Validation source:** tests/test_001_control_output_clamp_i32.c
+Counts consecutive samples different from `*stable`; a matching sample resets the count. After `threshold` contrary samples, it changes `*stable` to the sample and resets `*counter`. Valid calls require `threshold > 0`, nonnull pointers, and `*counter < threshold` on entry. The counter and stable objects must be distinct, initialized objects. Invalid calls return `false` without modifying either object.
 
-**Test-derived call:**
+The valid counter range is `0..threshold-1`; `threshold` may be as large as `UINT32_MAX`. The implementation increments only when the current count is below `threshold-1`, so it does not wrap.
+
+## `pc_debounce_dual_threshold_i32`
+
+Header/source: `stabilora/control/pc_debounce_dual_threshold_i32.h` / `src/pc_debounce_dual_threshold_i32.c`.
+
+Schmitt hysteresis over the full `int32_t` domain. When inactive, it activates at `input >= upper`; when active, it deactivates at `input <= lower`; between thresholds it retains state. Requires `lower < upper` and a nonnull, initialized `bool *active`. Invalid calls return `false` and preserve state. The implementation uses comparisons only and does not subtract thresholds.
+
+## `pc_hist_clip_limit_u32`
+
+Header/source: `stabilora/control/pc_hist_clip_limit_u32.h` / `src/pc_hist_clip_limit_u32.c`.
+
+Clips exactly 256 `uint32_t` bins to a positive `limit` and returns the sum removed in `uint64_t`. Maximum possible excess is `256 * (UINT32_MAX - 1)`, which fits in `uint64_t`. Exact `histogram == clipped` aliasing is supported; partial overlap is unsupported. `excess_out` must be nonnull and disjoint from both arrays. Null pointers or `limit == 0` return `false` before modifying outputs.
+
+## `pc_checked_shl_u32`
+
+Header/source: `stabilora/control/pc_checked_shl_u32.h` / `src/pc_checked_shl_u32.c`.
+
+Computes exact unsigned `value << shift`. Returns `false` for a null result pointer, `shift >= 32`, or any shift that would discard nonzero high bits. The result pointer is unchanged on failure. Zero may be shifted by any `shift` in `0..31`.
+
+## `pc_timeout_backoff_cap_u32`
+
+Header/source: `stabilora/control/pc_timeout_backoff_cap_u32.h` / `src/pc_timeout_backoff_cap_u32.c`.
+
+For positive `base` and `cap`, returns `min(base * 2^attempt, cap)`. The operation saturates to `cap` for `attempt >= 32`, a `uint32_t` shift overflow, or a scaled value at/above cap. A zero `base`, zero `cap`, or null output returns `false` and preserves output. No overflowing arithmetic or invalid shift is evaluated.
+
+## C integration
+
 ```c
-pc_control_output_clamp_i32(INT32_MIN, -10, 10, &out) && out == -10);
+#include <stabilora/control/pc_checked_shl_u32.h>
+
+uint32_t result;
+if (pc_checked_shl_u32(3u, 4u, &result)) {
+    /* result is 48 */
+}
 ```
 
-**Integration notes:** use the exact fixed-width types and units shown in the declaration; check the boolean/status return before consuming an output pointer; do not assume overlap, rounding or overflow behavior beyond the contract above.
-
-## include/stabilora/control/pc_debounce_counter_bool.h
-
-**Public symbol:** pc_debounce_counter_bool
-
-**Implementation unit:** src/pc_debounce_counter_bool.c
-
-**Purpose and contract:** Require threshold consecutive samples opposite stable before switching.
-
-**Validation source:** tests/test_002_debounce_counter_bool.c
-
-**Test-derived call:**
-```c
-pc_debounce_counter_bool(x,t,&nc,&ns\);
-```
-
-**Integration notes:** use the exact fixed-width types and units shown in the declaration; check the boolean/status return before consuming an output pointer; do not assume overlap, rounding or overflow behavior beyond the contract above.
-
-## include/stabilora/control/pc_debounce_dual_threshold_i32.h
-
-**Public symbol:** pc_debounce_dual_threshold_i32
-
-**Implementation unit:** src/pc_debounce_dual_threshold_i32.c
-
-**Purpose and contract:** Schmitt hysteresis: turn on at upper; turn off at lower. Require lower<upper.
-
-**Validation source:** tests/test_003_debounce_dual_threshold_i32.c
-
-**Test-derived call:**
-```c
-pc_debounce_dual_threshold_i32(9,0,10,&on) && !on);
-```
-
-**Integration notes:** use the exact fixed-width types and units shown in the declaration; check the boolean/status return before consuming an output pointer; do not assume overlap, rounding or overflow behavior beyond the contract above.
-
-## include/stabilora/control/pc_hist_clip_limit_u32.h
-
-**Public symbol:** pc_hist_clip_limit_u32
-
-**Implementation unit:** src/pc_hist_clip_limit_u32.c
-
-**Purpose and contract:** Cap each of 256 bins at a positive absolute limit and report removed mass. Exact histogram input/output alias is allowed; partial overlap is not. Failure leaves both outputs unchanged.
-
-**Validation source:** tests/test_004_hist_clip_limit_u32.c
-
-**Test-derived call:**
-```c
-pc_hist_clip_limit_u32(input, limit, out, &excess\);
-```
-
-**Integration notes:** use the exact fixed-width types and units shown in the declaration; check the boolean/status return before consuming an output pointer; do not assume overlap, rounding or overflow behavior beyond the contract above.
-
-## include/stabilora/control/pc_checked_shl_u32.h
-
-**Public symbol:** pc_checked_shl_u32
-
-**Implementation unit:** src/pc_checked_shl_u32.c
-
-**Purpose and contract:** Exact uint32_t left shift. False for shift >= 32, discarded high bits, or null output; on failure output is unchanged.
-
-**Validation source:** No enabled test source was found by symbol search.
-
-**Test-derived call:**
-```c
-No test-derived call was found.;
-```
-
-**Integration notes:** use the exact fixed-width types and units shown in the declaration; check the boolean/status return before consuming an output pointer; do not assume overlap, rounding or overflow behavior beyond the contract above.
-
-## include/stabilora/control/pc_timeout_backoff_cap_u32.h
-
-**Public symbol:** pc_timeout_backoff_cap_u32
-
-**Implementation unit:** src/pc_timeout_backoff_cap_u32.c
-
-**Purpose and contract:** Return min(base*2^attempt, cap), mapping arithmetic overflow to cap.
-
-**Validation source:** tests/test_005_timeout_backoff_cap_u32.c
-
-**Test-derived call:**
-```c
-pc_timeout_backoff_cap_u32(100,0,150,&out)&&out==100);
-```
-
-**Integration notes:** use the exact fixed-width types and units shown in the declaration; check the boolean/status return before consuming an output pointer; do not assume overlap, rounding or overflow behavior beyond the contract above.
-
+Compile the matching `src/pc_*.c` translation unit, or link the CMake `stabilora` static library. The installed API is C99 and has no external runtime dependency.
