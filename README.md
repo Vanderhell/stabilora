@@ -44,7 +44,3 @@ Six of six public APIs have standalone test executables. GCC 16.1 Release strict
 ## License
 
 Apache License 2.0, copyright Vanderhell. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-
-## Origin
-
-A standalone embedded-C library extracted from the PrimitiveCore product catalog. It is independently buildable and linkable.
