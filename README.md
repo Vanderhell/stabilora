@@ -24,7 +24,7 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-For selective integration, include `<stabilora/control/pc_name.h>` and compile the matching `src/pc_name.c`. With CMake, link the `stabilora` target; its public include root supports the same canonical header path.
+For selective integration, include the public header for the required operation and compile its corresponding source unit. With CMake, link the `stabilora` target.
 
 ## Documentation
 
