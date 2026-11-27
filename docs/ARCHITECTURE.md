@@ -1,9 +1,16 @@
 ﻿# Architecture
 
-Stabilora is a standalone C99 static library composed of six small translation units. Each operation has an independent public header and can be integrated by compiling its matching source file or linking the `stabilora` CMake target.
+Stabilora is a standalone C99 static library with six bounded control and
+signal-conditioning operations. Each public API has its own header and source
+unit under the product namespace.
 
-All state is passed by value or held in caller-owned objects. There is no initialization routine, heap allocation, thread, operating-system service, or mandatory external dependency. The public API does not change between standalone-source and CMake integration.
+All state is caller-owned. The library has no initialization routine, heap
+allocation, operating-system service, thread dependency, or mandatory external
+library. The namespaced target is `Stabilora::Stabilora`; source-level
+integration can compile a selected operation and its documented source
+requirements.
 
-Boolean functions validate their documented parameters before writing outputs. Debounce and hysteresis state is explicitly caller-owned; histogram buffers are fixed at 256 bins. Exact histogram in-place processing is supported, while partial array overlap and overlap with the excess output are not.
-
-The implementation requires C99 and fixed-width integer types. CMake exports the repository `include/` root for canonical includes such as `<stabilora/control/pc_checked_shl_u32.h>` and retains the direct control-header path for existing users.
+The operations include scalar output clamping, two debounce/hysteresis state
+updates, fixed 256-bin histogram clipping, checked 32-bit left shift, and a
+capped exponential timeout backoff. Histogram exact in-place aliasing is
+supported; partial overlap and overlap involving the excess output are not.

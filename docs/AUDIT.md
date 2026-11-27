@@ -1,15 +1,15 @@
-# Audit register — Stabilora v0.1.0
+﻿# Audit register — Stabilora v0.2.0
 
 Audit scope: all six public headers and implementations, migrated tests, CMake, CI, release documentation, and license metadata. Source audit covers full representable domains by range reasoning plus boundary and deterministic tests; it is not a formal proof for all possible call histories.
 
 | API | Result | Confirmed defect | Validation focus |
 |---|---|---|---|
-| `pc_control_output_clamp_i32` | OK | None | `INT32_MIN/MAX`, reversed/equal bounds, null output, one million deterministic differential intervals; unchanged output on failure |
-| `pc_debounce_counter_bool` | OK | None | Transition/noise sequences, repeated samples, threshold 1 and `UINT32_MAX`, valid/invalid counter invariant, zero threshold, null pointers, failure preservation |
-| `pc_debounce_dual_threshold_i32` | OK | None | Exact low/high equality, hysteresis retention and switching, invalid/equal/reversed limits, `INT32_MIN/MAX`, null output and failure preservation |
-| `pc_hist_clip_limit_u32` | OK | None | 256 maximum bins, exact in-place alias, disjoint output contract, maximum excess, invalid pointers/zero limit, unchanged outputs on failure, 20,000 seeded histograms |
-| `pc_checked_shl_u32` | OK | Missing standalone test was fixed by adding test 006; production code is correct | Shifts 0–31 and 32, `UINT_MAX`, null output, zero, high-bit boundaries, overflow and 100,000 seeded differential cases |
-| `pc_timeout_backoff_cap_u32` | OK | None | Attempts 0–40, 31/32/`UINT32_MAX`, saturation, exact cap equality, zero arguments, null output and exhaustive small-domain comparison |
+| `stabilora_control_output_clamp_i32` | OK | None | `INT32_MIN/MAX`, reversed/equal bounds, null output, one million deterministic differential intervals; unchanged output on failure |
+| `stabilora_debounce_counter_bool` | OK | None | Transition/noise sequences, repeated samples, threshold 1 and `UINT32_MAX`, valid/invalid counter invariant, zero threshold, null pointers, failure preservation |
+| `stabilora_debounce_dual_threshold_i32` | OK | None | Exact low/high equality, hysteresis retention and switching, invalid/equal/reversed limits, `INT32_MIN/MAX`, null output and failure preservation |
+| `stabilora_hist_clip_limit_u32` | OK | None | 256 maximum bins, exact in-place alias, disjoint output contract, maximum excess, invalid pointers/zero limit, unchanged outputs on failure, 20,000 seeded histograms |
+| `stabilora_checked_shl_u32` | OK | Missing standalone test was fixed by adding test 006; production code is correct | Shifts 0â€“31 and 32, `UINT_MAX`, null output, zero, high-bit boundaries, overflow and 100,000 seeded differential cases |
+| `stabilora_timeout_backoff_cap_u32` | OK | None | Attempts 0â€“40, 31/32/`UINT32_MAX`, saturation, exact cap equality, zero arguments, null output and exhaustive small-domain comparison |
 
 ## Range and safety conclusions
 
@@ -24,4 +24,4 @@ No production algorithm defect was confirmed; no algorithm changes were made. Te
 
 ## Build and release checks
 
-See [TESTING.md](TESTING.md) for exact compiler versions, commands and executed results. C99 remains the public language contract. Representative target validation passed for all six APIs on an ESP32-S3 v0.2 at 240 MHz; see [TESTING.md](TESTING.md). Performance and isolated footprint remain unmeasured.
+See [TESTING.md](TESTING.md) for exact compiler versions, commands and executed results. C99 remains the public language contract. Historical target validation reported all six pre-productization APIs on an ESP32-S3 v0.2 at 240 MHz. Current namespaced revision is HW NOT VERIFIED. Performance and isolated footprint remain unmeasured.

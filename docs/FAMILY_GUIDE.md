@@ -1,23 +1,24 @@
-# Stabilora family guide
+﻿# Stabilora family guide
 
-Stabilora provides output clamping, boolean debounce, dual-threshold hysteresis, histogram clipping, checked unsigned shifts, and capped timeout backoff for embedded C applications.
+Stabilora provides six independent control and signal-conditioning operations: scalar output clamping, boolean debounce, dual-threshold hysteresis, fixed-size histogram clipping, checked unsigned shifts, and capped exponential timeout backoff.
 
 ## Integration
 
-- Include `<stabilora/control/pc_name.h>` and compile the matching `src/pc_name.c`, or link the `stabilora` CMake static library.
-- The library and headers require C99 and fixed-width integer types.
-- Check every boolean return before using output values; outputs are preserved on documented failures.
-- Allocate and initialize caller-owned state and 256-bin buffers. Debounce's counter/stable objects and histogram's excess output must not overlap.
+- Use headers under `<stabilora/control/>` and link the CMake target `Stabilora::Stabilora`.
+- For direct source integration, compile the matching `src/stabilora_<operation>.c`; timeout backoff additionally needs `src/stabilora_checked_shl_u32.c`.
+- The public library is C99 and requires only standard fixed-width integer and boolean headers.
+- Check status returns before consuming outputs. Caller owns debounce state and histogram buffers.
+- Debounce counter/stable objects must be distinct. Histogram exact in-place alias is supported; partial buffer overlap and overlap with `excess_out` are unsupported.
 
 ## API map
 
-| Header | Function | Summary | Test |
+| Public header | Function | Summary | Direct test |
 |---|---|---|---|
-| `pc_control_output_clamp_i32.h` | `pc_control_output_clamp_i32` | Clamp `int32_t` to inclusive bounds | `test_001` |
-| `pc_debounce_counter_bool.h` | `pc_debounce_counter_bool` | Require consecutive differing samples | `test_002` |
-| `pc_debounce_dual_threshold_i32.h` | `pc_debounce_dual_threshold_i32` | Schmitt hysteresis with inclusive switching thresholds | `test_003` |
-| `pc_hist_clip_limit_u32.h` | `pc_hist_clip_limit_u32` | Clip 256 bins and report excess | `test_004` |
-| `pc_timeout_backoff_cap_u32.h` | `pc_timeout_backoff_cap_u32` | Return capped exponential backoff | `test_005` |
-| `pc_checked_shl_u32.h` | `pc_checked_shl_u32` | Exact checked `uint32_t` left shift | `test_006` |
+| `stabilora/control/control_output_clamp_i32.h` | `stabilora_control_output_clamp_i32` | Clamp `int32_t` to inclusive bounds | `test_001_control_output_clamp_i32.c` |
+| `stabilora/control/debounce_counter_bool.h` | `stabilora_debounce_counter_bool` | Require consecutive differing samples | `test_002_debounce_counter_bool.c` |
+| `stabilora/control/debounce_dual_threshold_i32.h` | `stabilora_debounce_dual_threshold_i32` | Schmitt hysteresis with inclusive switching thresholds | `test_003_debounce_dual_threshold_i32.c` |
+| `stabilora/control/hist_clip_limit_u32.h` | `stabilora_hist_clip_limit_u32` | Clip 256 bins and report excess | `test_004_hist_clip_limit_u32.c` |
+| `stabilora/control/checked_shl_u32.h` | `stabilora_checked_shl_u32` | Exact checked `uint32_t` left shift | `test_006_checked_shl_u32.c` |
+| `stabilora/control/timeout_backoff_cap_u32.h` | `stabilora_timeout_backoff_cap_u32` | Return capped exponential backoff | `test_005_timeout_backoff_cap_u32.c` |
 
-See [API_REFERENCE.md](API_REFERENCE.md) for exact limits and failure semantics, [TESTING.md](TESTING.md) for host and ESP32-S3 validation evidence, and [AUDIT.md](AUDIT.md) for the per-API audit register.
+See [API_REFERENCE.md](API_REFERENCE.md) for contracts, [TESTING.md](TESTING.md) for actual host and historical hardware evidence, and [AUDIT.md](AUDIT.md) for range analysis.

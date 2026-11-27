@@ -1,5 +1,7 @@
-# Performance
+﻿# Performance
 
-Representative correctness checks for all six APIs passed on an ESP32-S3 v0.2 at 240 MHz (see [TESTING.md](TESTING.md)). No controlled performance or isolated footprint measurements are available; flash, static RAM, stack, and cycle counts for the library remain unmeasured.
+No current execution-cycle, timing, isolated flash, static RAM, or stack measurements are available for Stabilora. Operation counts are bounded by fixed-width arithmetic, six public translation units, and a fixed 256-bin pass for histogram clipping; those facts do not establish target latency or memory bounds.
 
-The code uses fixed-size storage and bounded work. Histogram clipping processes exactly 256 bins; timeout backoff uses at most one checked shift and bounded branches. Operation counts do not predict target latency. Measure on the actual target before making performance claims or algorithm changes.
+A historical correctness workload was run on an ESP32-S3 revision v0.2 at 240 MHz with Arduino-ESP32 3.3.10 before the current API namespace and source layout. It did not record function cycles or isolated library footprint. Current-revision hardware validation remains **HW NOT VERIFIED**.
+
+Measure on the intended target before making performance claims. Separate library contribution from firmware framework and validation harness overhead.

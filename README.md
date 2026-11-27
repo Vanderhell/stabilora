@@ -1,4 +1,4 @@
-# Stabilora
+﻿# Stabilora
 ![CI](https://github.com/Vanderhell/stabilora/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg) ![Language](https://img.shields.io/badge/language-C99-informational.svg)
 
 ![Stabilora banner](docs/banner.svg)
@@ -24,8 +24,20 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-For selective integration, include the public header for the required operation and compile its corresponding source unit. With CMake, link the `stabilora` target.
+For package integration, call `find_package(Stabilora CONFIG REQUIRED)` and link `Stabilora::Stabilora`. Tests are opt-in and off by default. For selective integration, include the operation header and compile its source file plus documented helper sources.
 
+## Consume Stabilora
+
+CMake package:
+
+```cmake
+find_package(Stabilora CONFIG REQUIRED)
+target_link_libraries(your_target PRIVATE Stabilora::Stabilora)
+```
+
+`add_subdirectory()` is also supported. Both dependency paths need only a C compiler when `STABILORA_BUILD_TESTS=OFF` (the default). Enabling the optional tests also enables the C++ compiler for the header smoke test.
+
+For direct C99 integration, include only the operation header and compile its matching source. `stabilora_timeout_backoff_cap_u32` also requires `src/stabilora_checked_shl_u32.c`.
 ## Documentation
 
 | Need | Read |
@@ -39,8 +51,8 @@ For selective integration, include the public header for the required operation 
 
 ## Validation status
 
-Six of six public APIs have standalone test executables. GCC 16.1 Release strict, Clang-cl 19.1.5 Release strict, MSVC 19.42 Debug and Release, Clang-cl AddressSanitizer, and Clang-cl UndefinedBehaviorSanitizer each passed all six tests. Tests use explicit checks that remain enabled in Release. ESP32-S3 v0.2 runtime checks passed for all six APIs (representative deterministic workload; see [TESTING.md](docs/TESTING.md)). No performance or isolated footprint measurement was made.
+Six of six public APIs have standalone test executables. Current GCC, ClangCL and MSVC Debug/Release validation is summarized in [TESTING.md](docs/TESTING.md). Historical ESP32-S3 evidence covers the six pre-productization APIs; current revision is HW NOT VERIFIED. Performance, isolated flash and RAM, and stack measurements have not been made.
 
 ## License
 
-Apache License 2.0, copyright Vanderhell. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0, copyright Vanderhell. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Contribution guidance: [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting: [SECURITY.md](SECURITY.md).

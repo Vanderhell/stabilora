@@ -1,45 +1,60 @@
-name: stabilora-ci
+﻿name: stabilora-ci
+
 on:
   push:
   pull_request:
+
 jobs:
   host:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            compiler: gcc
-            cc: gcc
-            config: Release
-          - os: ubuntu-latest
-            compiler: clang
-            cc: clang
-            config: Release
-          - os: windows-latest
-            compiler: msvc
+          - compiler: gcc
+            cxx: g++
             config: Debug
-          - os: windows-latest
-            compiler: msvc
+          - compiler: gcc
+            cxx: g++
             config: Release
-    runs-on: ${{ matrix.os }}
+          - compiler: clang
+            cxx: clang++
+            config: Debug
+          - compiler: clang
+            cxx: clang++
+            config: Release
     steps:
       - uses: actions/checkout@v4
-      - name: Configure strict Release tests
-        if: matrix.compiler != 'msvc'
-        run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.cc }} -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-      - name: Configure MSVC tests
-        if: matrix.compiler == 'msvc'
+      - name: Configure strict C99 tests
+        run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+      - run: cmake --build build --parallel
+      - run: ctest --test-dir build --output-on-failure
+  msvc:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure strict C99 tests
         run: cmake -S . -B build -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON
       - run: cmake --build build --config ${{ matrix.config }} --parallel
-      - run: ctest --test-dir build --build-config ${{ matrix.config }} --output-on-failure
-  sanitizers:
+      - run: ctest --test-dir build -C ${{ matrix.config }} --output-on-failure
+  sanitizer:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        compiler: [gcc, clang]
+        sanitizer: [address, undefined]
     steps:
       - uses: actions/checkout@v4
-      - run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.compiler }} -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+      - name: Configure sanitizer
+        run: >-
+          cmake -S . -B build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+          -DSTABILORA_BUILD_TESTS=ON -DSTABILORA_STRICT_WARNINGS=ON -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer -fno-sanitize-recover=all"
+          -DCMAKE_CXX_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer -fno-sanitize-recover=all"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-sanitize-recover=all"
       - run: cmake --build build --parallel
       - run: ctest --test-dir build --output-on-failure
